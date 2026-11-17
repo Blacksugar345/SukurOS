@@ -226,6 +226,7 @@
         <div class="hero-gradient-overlay"></div>
       </div>
       
+      <div class="hero-content">
         <!-- data-text is used for the CSS glitch effect -->
         <h1 class="hero-title glitch-layer" data-text="SUKUR.OS">SUKUROS</h1>
         <p class="hero-subtitle typewriter-anim">The Zwasonian Felines</p>
