@@ -226,14 +226,9 @@
         <div class="hero-gradient-overlay"></div>
       </div>
       
-      <div class="hero-content">
-        <div class="hero-telemetry">
-          <span class="telemetry-dot"></span>
-          <span>NEURAL_LINK // FELINE_OS ACTIVE</span>
-        </div>
         <!-- data-text is used for the CSS glitch effect -->
         <h1 class="hero-title glitch-layer" data-text="SUKUR.OS">SUKUROS</h1>
-        <p class="hero-subtitle typewriter-anim">the zwasonian feline</p>
+        <p class="hero-subtitle typewriter-anim">The Zwasonian Felines</p>
         
         <button class="scroll-down-btn" aria-label="Scroll down to About section" @click="scrollTo('about')">
           <svg viewBox="0 0 24 24" class="arrow-icon" stroke="currentColor" stroke-width="2" fill="none" aria-hidden="true">

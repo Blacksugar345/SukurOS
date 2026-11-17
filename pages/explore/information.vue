@@ -46,7 +46,6 @@
           <!-- Right Side: Database Info -->
           <div class="id-data" v-if="identityData">
             <div class="doc-header">
-              <span class="hud-subtag">BIOMETRIC_DOSSIER // LEVEL_01</span>
               <h1 class="doc-title glow-text">PERSONAL_DATA</h1>
             </div>
 

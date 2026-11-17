@@ -19,7 +19,7 @@
       <div class="archive-container">
         
         <div class="doc-header os-anim anim-scan" :class="{ 'is-revealed': isRevealed }">
-          <span class="hud-subtag">FIELD_OPERATIONS // EVENT_LOG</span>
+          <span class="hud-subtag">Sukuros // Events </span>
           <h1 class="doc-title glow-text">FURRY CONVENTIONS</h1>
           <p class="doc-meta">ACCESSING DATABASE... {{ formattedFurcons?.length || 0 }} RECORDS FOUND.</p>
         </div>

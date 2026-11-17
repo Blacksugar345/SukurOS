@@ -19,7 +19,7 @@
       <div class="archive-container">
         
         <div class="doc-header os-anim anim-scan" :class="{ 'is-revealed': isRevealed }">
-          <span class="hud-subtag">PHYSICAL_CREDENTIALS // ID_TOKENS</span>
+          <span class="hud-subtag">Sukuros // namecards</span>
           <h1 class="doc-title glow-text">NAMECARDS</h1>
           <p class="doc-meta">ACCESSING DATABASE... {{ namecards?.length || 0 }} RECORDS FOUND.</p>
         </div>

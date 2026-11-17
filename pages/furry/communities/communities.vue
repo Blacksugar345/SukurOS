@@ -19,7 +19,7 @@
       <div class="archive-container">
         
         <div class="doc-header os-anim anim-scan" :class="{ 'is-revealed': isRevealed }">
-          <span class="hud-subtag">ALLIANCE_NETWORK // SQUADRONS</span>
+          <span class="hud-subtag">Sukuros // friend_groups </span>
           <h1 class="doc-title glow-text">FRIEND GROUPS</h1>
           <p class="doc-meta">ACCESSING DATABASE... {{ formattedGroups?.length || 0 }} RECORDS FOUND.</p>
         </div>

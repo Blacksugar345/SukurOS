@@ -22,7 +22,6 @@
         <div class="doc-header">
           <div class="doc-status-row">
             <span class="status-pill"><span class="pulse-dot"></span> READ_ONLY_LOG</span>
-            <span class="sys-path">/var/log/hobbies_interests.txt</span>
           </div>
           <h1 class="doc-title glow-text">LOG // HOBBIES_AND_INTERESTS.TXT</h1>
           <div class="doc-meta">

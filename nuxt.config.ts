@@ -29,7 +29,7 @@ export default defineNuxtConfig({
       htmlAttrs: {
         lang: 'en'
       },
-      title: 'SUKUR.OS // Cyber-Feline Neural Portal',
+      title: 'SUKUROS',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },

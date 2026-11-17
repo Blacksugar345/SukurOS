@@ -19,7 +19,7 @@
       <div class="gallery-container">
         
         <div class="doc-header os-anim anim-scan" :class="{ 'is-revealed': isRevealed }">
-          <span class="hud-subtag">VISUAL_VAULT // ARTWORK_AND_MEDIA</span>
+          <span class="hud-subtag">Sukuros // Media archives </span>
           <h1 class="doc-title glow-text">MEDIA ARCHIVES</h1>
           <p class="doc-meta">ACCESSING DATABASE... {{ filteredImages.length }} RECORDS FOUND.</p>
         </div>

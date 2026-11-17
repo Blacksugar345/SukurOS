@@ -19,7 +19,6 @@
       <div class="archive-container">
         
         <div class="doc-header os-anim anim-scan" :class="{ 'is-revealed': isRevealed }">
-          <span class="hud-subtag">OPERATIVE_DATABASE // ANTHRO_REGISTRY</span>
           <h1 class="doc-title glow-text">ORIGINAL CHARACTERS</h1>
           <!-- Dynamic Entry Counter -->
           <p class="doc-meta">ACCESSING DATA... {{ characters?.length || 0 }} ENTRIES FOUND.</p>
