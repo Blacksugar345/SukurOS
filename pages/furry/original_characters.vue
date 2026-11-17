@@ -2,23 +2,24 @@
   <div class="os-container wiki-mode">
     
     <!-- Background Grid -->
-    <div class="bg-decoration-grid"></div>
+    <div class="bg-decoration-grid" aria-hidden="true"></div>
 
     <!-- Header -->
     <header class="sub-header">
       <div class="logo">
         <span class="logo-text glow-text">SUKUR.OS // Original_characters</span>
       </div>
-      <a href="/" class="return-btn">
+      <NuxtLink to="/" class="return-btn">
         <span class="caret-left">◂</span> RETURN
-      </a>
+      </NuxtLink>
     </header>
 
     <!-- Main Content -->
     <main class="document-wrapper">
       <div class="archive-container">
         
-        <div class="doc-header os-anim anim-scan">
+        <div class="doc-header os-anim anim-scan" :class="{ 'is-revealed': isRevealed }">
+          <span class="hud-subtag">OPERATIVE_DATABASE // ANTHRO_REGISTRY</span>
           <h1 class="doc-title glow-text">ORIGINAL CHARACTERS</h1>
           <!-- Dynamic Entry Counter -->
           <p class="doc-meta">ACCESSING DATA... {{ characters?.length || 0 }} ENTRIES FOUND.</p>
@@ -27,14 +28,23 @@
         <div class="character-list" v-if="characters?.length">
           
           <!-- Character Card -->
-          <div 
-            class="char-card os-anim anim-scan" 
+          <article 
+            class="char-card hud-corners os-anim anim-scan" 
+            :class="{ 'is-revealed': isRevealed }"
             v-for="char in characters" 
             :key="char.id"
           >
             <!-- Card Layout: Left Image -->
             <div class="char-image-container">
-              <img :src="char.image_url || '/Explorehome.png'" :alt="char.nickname" class="char-img" />
+              <img 
+                :src="char.image_url || '/Explorehome.png'" 
+                :alt="char.nickname || char.fullname" 
+                class="char-img" 
+                loading="lazy"
+                decoding="async"
+                width="220"
+                height="220"
+              />
             </div>
 
             <!-- Card Layout: Right Info -->
@@ -91,7 +101,7 @@
                     [{{ char.status ? char.status.toUpperCase() : 'UNKNOWN' }}]
                   </span>
                   
-                  <svg viewBox="0 0 100 20" preserveAspectRatio="none" class="ekg-svg">
+                  <svg viewBox="0 0 100 20" preserveAspectRatio="none" class="ekg-svg" aria-hidden="true">
                     <!-- Heartbeat Pulse for Alive -->
                     <polyline 
                       v-if="isAlive(char.status)" 
@@ -115,7 +125,7 @@
               </div>
             </div>
 
-          </div>
+          </article>
         </div>
 
         <!-- Loading State -->
@@ -130,20 +140,26 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const supabase = useSupabaseClient()
+const isRevealed = ref(false)
 
-// Fetch character list matching the new schema
+// Fetch character list matching the schema
 const { data: characters } = await useAsyncData('characters', async () => {
-  const { data, error } = await supabase.from('original_characters').select('*').order('order', { ascending: true })
-  if (error) console.error("SUPABASE ERROR:", error.message)
-  return data || []
+  try {
+    const { data, error } = await supabase.from('original_characters').select('*').order('order', { ascending: true })
+    if (error) console.error("SUPABASE ERROR:", error.message)
+    return data || []
+  } catch (err) {
+    console.error("SUPABASE FETCH ERROR:", err)
+    return []
+  }
 })
 
 // Helper to determine EKG state based on status text
 const isAlive = (status) => {
-  if (!status) return true // Defaults to alive if null
+  if (!status) return true
   const s = status.toLowerCase()
   if (s.includes('deceased') || s.includes('dead') || s.includes('mia')) return false
   return true
@@ -151,16 +167,12 @@ const isAlive = (status) => {
 
 onMounted(() => {
   setTimeout(() => {
-    document.querySelectorAll('.os-anim').forEach(el => {
-      el.classList.add('is-revealed')
-    })
-  }, 100)
+    isRevealed.value = true
+  }, 60)
 })
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;600&display=swap');
-
 /* Base Styles */
 .os-container {
   --bg-void: #05080c; 
@@ -183,8 +195,8 @@ onMounted(() => {
 .bg-decoration-grid {
   position: fixed;
   inset: 0;
-  background-image: linear-gradient(rgba(110, 234, 245, 0.02) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(110, 234, 245, 0.02) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(110, 234, 245, 0.025) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(110, 234, 245, 0.025) 1px, transparent 1px);
   background-size: 50px 50px;
   z-index: 0;
   pointer-events: none;
@@ -197,56 +209,88 @@ onMounted(() => {
   position: fixed;
   top: 0; left: 0; right: 0;
   display: flex; justify-content: space-between; align-items: center;
-  padding: 1.5rem 3rem;
-  background: rgba(5, 8, 12, 0.95);
-  border-bottom: 1px solid rgba(110, 234, 245, 0.1);
+  padding: 1.25rem 3rem;
+  background: rgba(5, 8, 12, 0.92);
+  border-bottom: 1px solid rgba(110, 234, 245, 0.14);
   z-index: 50;
+  backdrop-filter: blur(12px);
 }
-.logo-text { font-family: var(--font-display); font-weight: 800; letter-spacing: 0.1em; }
+.logo-text { font-family: var(--font-display); font-weight: 800; font-size: 1.15rem; letter-spacing: 0.12em; }
 .return-btn {
   color: var(--text-secondary); text-decoration: none; font-family: var(--font-display);
-  font-size: 0.85rem; transition: color 0.3s ease; display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.82rem; letter-spacing: 0.1em; transition: all 0.25s ease; display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.4rem 0.85rem; border: 1px solid rgba(110, 234, 245, 0.2); border-radius: 2px; background: rgba(6, 11, 16, 0.6);
 }
-.return-btn:hover { color: var(--cyan); }
+.return-btn:hover { color: var(--cyan); border-color: var(--cyan); text-shadow: 0 0 8px var(--cyan-glow); }
 
 /* Layout */
 .document-wrapper {
   position: relative;
   z-index: 10;
-  padding: 8rem 5vw 4rem 5vw;
+  padding: 7.5rem 5vw 4rem 5vw;
   display: flex;
   justify-content: center;
 }
 .archive-container {
-  max-width: 950px;
+  max-width: 960px;
   width: 100%;
 }
 
-.doc-header { margin-bottom: 3rem; }
-.doc-title { font-family: var(--font-display); font-size: 2.2rem; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
-.doc-meta { font-family: var(--font-body); font-size: 0.9rem; color: #5d7e86; letter-spacing: 0.1em; }
+.doc-header { margin-bottom: 2.75rem; }
+.hud-subtag {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  color: #5d7e86;
+  letter-spacing: 0.15em;
+  margin-bottom: 0.35rem;
+}
+.doc-title { font-family: var(--font-display); font-size: clamp(1.75rem, 3.5vw, 2.25rem); letter-spacing: 0.05em; margin: 0 0 0.5rem 0; }
+.doc-meta { font-family: var(--font-body); font-size: 0.9rem; color: #5d7e86; letter-spacing: 0.1em; margin: 0; }
 
 /* Character Cards */
 .character-list {
   display: flex;
   flex-direction: column;
-  gap: 3rem;
+  gap: 2.5rem;
 }
 
 .char-card {
   position: relative;
   display: flex;
-  background: rgba(12, 22, 30, 0.4);
-  border: 1px solid rgba(110, 234, 245, 0.15);
+  background: rgba(12, 22, 30, 0.55);
+  border: 1px solid rgba(110, 234, 245, 0.2);
   border-radius: 4px; 
   padding: 2rem;
-  gap: 2.5rem;
-  transition: transform 0.3s ease, border-color 0.3s ease;
+  gap: 2.25rem;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hud-corners::before,
+.hud-corners::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+}
+.hud-corners::before {
+  top: -1px; left: -1px;
+  border-top: 2px solid var(--cyan);
+  border-left: 2px solid var(--cyan);
+}
+.hud-corners::after {
+  bottom: -1px; right: -1px;
+  border-bottom: 2px solid var(--cyan);
+  border-right: 2px solid var(--cyan);
 }
 
 .char-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(110, 234, 245, 0.4);
+  transform: translateY(-4px);
+  border-color: rgba(110, 234, 245, 0.48);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.6), 0 0 20px rgba(110, 234, 245, 0.1);
 }
 
 /* Card Image */
@@ -256,16 +300,17 @@ onMounted(() => {
   height: 220px;
   border-radius: 4px;
   overflow: hidden;
-  border: 1px solid rgba(110, 234, 245, 0.2);
-  background: #000;
+  border: 1px solid rgba(110, 234, 245, 0.25);
+  background: #030609;
 }
 .char-img {
   width: 100%; height: 100%;
   object-fit: cover;
-  opacity: 0.85;
-  transition: opacity 0.3s ease;
+  opacity: 0.88;
+  transition: opacity 0.3s ease, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  display: block;
 }
-.char-card:hover .char-img { opacity: 1; }
+.char-card:hover .char-img { opacity: 1; transform: scale(1.03); }
 
 /* Card Info */
 .char-info {
@@ -273,7 +318,7 @@ onMounted(() => {
   flex-direction: column;
   justify-content: center;
   flex-grow: 1;
-  min-width: 0; /* NEW: Forces the flex container to respect the card's boundaries */
+  min-width: 0;
 }
 
 .info-header {
@@ -281,26 +326,26 @@ onMounted(() => {
   justify-content: space-between;
   align-items: baseline;
   margin-bottom: 1rem;
-  border-bottom: 1px solid rgba(110, 234, 245, 0.1);
-  padding-bottom: 0.5rem;
-  flex-wrap: wrap; /* Allows header to wrap if the name is very long */
+  border-bottom: 1px solid rgba(110, 234, 245, 0.14);
+  padding-bottom: 0.6rem;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
 .char-name {
   font-family: var(--font-display);
   color: var(--cyan);
-  font-size: 1.6rem;
+  font-size: 1.55rem;
   letter-spacing: 0.05em;
   margin: 0;
-  word-break: break-word; /* Breaks long names safely */
+  word-break: break-word;
 }
 
 .char-nickname {
   color: var(--text-primary);
   font-family: var(--font-body);
   font-size: 1rem;
-  opacity: 0.7;
+  opacity: 0.75;
   font-weight: 400;
   margin-left: 0.5rem;
   white-space: nowrap;
@@ -309,73 +354,49 @@ onMounted(() => {
 .char-species {
   font-family: var(--font-display);
   color: #ffb800; 
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
 
-/* Updated 2-Column Grid for more brief info */
+/* 2-Column Data Grid (Deduplicated & Fixed Wrapping) */
 .info-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.75rem 1.5rem;
-  margin-bottom: 1.5rem;
+  gap: 0.8rem 1.5rem;
+  margin-bottom: 1.35rem;
 }
 
 .info-item {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  min-width: 0; /* Keeps grid items from blowing out */
+  min-width: 0;
 }
 
 .label { 
-  font-size: 0.75rem; 
+  font-size: 0.72rem; 
   color: #5d7e86; 
   font-weight: 600; 
   text-transform: uppercase; 
-  letter-spacing: 0.05em; 
+  letter-spacing: 0.06em; 
 }
 
 .value { 
   font-size: 0.95rem; 
   color: var(--text-primary); 
-  white-space: normal; /* CHANGED: Allows text to wrap to the next line */
-  word-wrap: break-word; /* NEW: Breaks long continuous words if needed */
+  white-space: normal;
+  word-wrap: break-word;
   line-height: 1.4;
 }
 
 .char-desc {
-  font-size: 1rem;
+  font-size: 0.98rem;
   color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
+  line-height: 1.65;
+  margin: 0 0 1.5rem 0;
   flex-grow: 1;
   word-wrap: break-word;
-}
-
-/* Updated 2-Column Grid for more brief info */
-.info-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem 1.5rem;
-  margin-bottom: 1.5rem;
-}
-
-.info-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-.label { font-size: 0.75rem; color: #5d7e86; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
-.value { font-size: 0.95rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.char-desc {
-  font-size: 1rem;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
-  flex-grow: 1;
 }
 
 /* Action Row & EKG Monitor */
@@ -383,7 +404,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  border-top: 1px dashed rgba(110, 234, 245, 0.15);
+  border-top: 1px dashed rgba(110, 234, 245, 0.18);
   padding-top: 1rem;
 }
 
@@ -391,7 +412,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  width: 150px;
+  width: 155px;
 }
 
 .status-label {
@@ -405,8 +426,8 @@ onMounted(() => {
 .ekg-svg {
   width: 100%;
   height: 25px;
-  background: rgba(6, 11, 16, 0.5);
-  border: 1px solid rgba(110, 234, 245, 0.1);
+  background: rgba(6, 11, 16, 0.6);
+  border: 1px solid rgba(110, 234, 245, 0.15);
   border-radius: 2px;
 }
 
@@ -440,31 +461,44 @@ onMounted(() => {
 /* Button */
 .more-info-btn {
   font-family: var(--font-display);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 700;
   color: var(--bg-void);
   background: var(--cyan);
-  padding: 0.5rem 1rem;
+  padding: 0.55rem 1.1rem;
   border-radius: 2px;
   text-decoration: none;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
   height: max-content;
 }
 
 .more-info-btn:hover {
   background: #fff;
-  box-shadow: 0 0 15px var(--cyan-glow);
+  box-shadow: 0 0 16px var(--cyan-glow);
+  transform: translateX(2px);
+}
+
+.loading-state {
+  text-align: center;
+  padding: 4rem 1rem;
+  font-family: var(--font-display);
+  letter-spacing: 0.1em;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-  .char-card { flex-direction: column; align-items: center; }
-  .char-image-container { width: 100%; max-width: 300px; }
+  .sub-header { padding: 1rem 1.25rem; }
+  .logo-text { font-size: 0.95rem; }
+  .document-wrapper { padding: 5.5rem 1rem 3rem 1rem; }
+  .char-card { flex-direction: column; align-items: center; padding: 1.5rem; gap: 1.5rem; }
+  .char-image-container { width: 100%; max-width: 280px; height: auto; aspect-ratio: 1; }
   .info-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
   .info-grid { grid-template-columns: 1fr; }
-  .action-row { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+  .action-row { flex-direction: column; align-items: stretch; gap: 1.25rem; }
+  .ekg-monitor { width: 100%; }
   .more-info-btn { width: 100%; justify-content: center; }
 }
 

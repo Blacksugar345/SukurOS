@@ -2,27 +2,41 @@
   <div class="os-container wiki-mode">
     
     <!-- Background Grid -->
-    <div class="bg-decoration-grid"></div>
+    <div class="bg-decoration-grid" aria-hidden="true"></div>
 
     <!-- Header -->
     <header class="sub-header">
       <div class="logo">
         <span class="logo-text glow-text">SUKUR.OS // Original_characters</span>
       </div>
-      <a href="/furry/original_characters" class="return-btn">
-        <span class="caret-left">◂</span> RETURN_TO_ARCHIVE
-      </a>
+      <NuxtLink to="/furry/original_characters" class="return-btn">
+        <span class="caret-left">◂</span> RETURN
+      </NuxtLink>
     </header>
 
     <main class="document-wrapper" v-if="character">
-      <div class="wiki-container os-anim anim-scan">
+      <div class="wiki-container os-anim anim-scan" :class="{ 'is-revealed': isRevealed }">
         
         <!-- Top Section: Identity & Image -->
-        <div class="wiki-hero hud-frame">
-          <div class="hero-image-box">
-            <img :src="character.image_url || '/Explorehome.png'" :alt="character.nickname" class="wiki-img" />
-            <div class="scanner-line"></div>
-          </div>
+        <section class="wiki-hero hud-frame hud-corners">
+          <button
+            type="button"
+            class="hero-image-box"
+            :aria-label="`Expand ${character.fullname} portrait`"
+            @click="openLightbox(character.image_url || '/Explorehome.png', `${character.fullname} // Portrait`)"
+          >
+            <img 
+              :src="character.image_url || '/Explorehome.png'" 
+              :alt="character.nickname || character.fullname" 
+              class="wiki-img" 
+              fetchpriority="high"
+              decoding="async"
+              width="280"
+              height="280"
+            />
+            <div class="scanner-line" aria-hidden="true"></div>
+            <span class="zoom-badge">[ EXPAND ⤢ ]</span>
+          </button>
           
           <div class="hero-data">
             <div class="hero-header-row">
@@ -43,11 +57,11 @@
               <div class="stat-box"><span class="label">OCCUPATION</span><span class="value">{{ character.occupation || 'N/A' }}</span></div>
             </div>
           </div>
-        </div>
+        </section>
 
         <!-- Middle Section: Physical Attributes & Origin -->
-        <div class="wiki-section hud-frame">
-          <h3 class="section-title">> PHYSICAL_ATTRIBUTES & ORIGIN</h3>
+        <section class="wiki-section hud-frame hud-corners">
+          <h3 class="section-title">&gt; PHYSICAL_ATTRIBUTES &amp; ORIGIN</h3>
           <div class="details-grid">
             <div class="detail-item"><span class="label">AGE</span><span class="value">{{ character.age || '?' }}</span></div>
             <div class="detail-item"><span class="label">DOB</span><span class="value">{{ character.year_birth || '?' }}</span></div>
@@ -66,11 +80,11 @@
               <span class="value rich-text" v-html="character.education || 'N/A'"></span>
             </div>
           </div>
-        </div>
+        </section>
 
         <!-- Bottom Section: Lore & Abilities -->
-        <div class="wiki-section hud-frame">
-          <h3 class="section-title">> CLASSIFIED_INTEL</h3>
+        <section class="wiki-section hud-frame hud-corners">
+          <h3 class="section-title">&gt; CLASSIFIED_INTEL</h3>
           
           <!-- Backstory uses v-html for dynamic linking -->
           <div class="text-block" v-if="character.backstory">
@@ -82,39 +96,71 @@
             <h4 class="block-title">KNOWN ABILITIES / SKILLS</h4>
             <p class="block-text">{{ character.abilities }}</p>
           </div>
-        </div>
+        </section>
 
       </div>
     </main>
     
     <!-- Loading State -->
-    <main class="document-wrapper loading-state" v-else>
+    <main class="document-wrapper loading-state" v-else-if="pending">
       <div class="spinner-box">
         <p class="glow-text">DECRYPTING CHARACTER WIKI...</p>
       </div>
     </main>
 
+    <!-- Not Found / Error Fallback -->
+    <main class="document-wrapper loading-state" v-else>
+      <div class="hud-frame" style="text-align: center; max-width: 500px;">
+        <h2 class="glow-text" style="color: #ff3366; font-family: var(--font-display);">DOSSIER NOT FOUND</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Operative file [{{ characterNickname }}] could not be retrieved from the database.</p>
+        <NuxtLink to="/furry/original_characters" class="return-btn" style="justify-content: center;">
+          ◂ RETURN TO ARCHIVE
+        </NuxtLink>
+      </div>
+    </main>
+
+    <!-- LIGHTBOX MODAL -->
+    <Teleport to="body">
+      <div v-if="lightboxUrl" class="cyber-lightbox" role="dialog" aria-modal="true" @click="closeLightbox">
+        <div class="lightbox-frame hud-frame" @click.stop>
+          <div class="lightbox-bar">
+            <span class="lightbox-caption glow-text">{{ lightboxCaption }}</span>
+            <button type="button" class="lightbox-close" aria-label="Close image preview" @click="closeLightbox">✕ ESC</button>
+          </div>
+          <img :src="lightboxUrl" :alt="lightboxCaption" class="lightbox-img" decoding="async" />
+        </div>
+      </div>
+    </Teleport>
+
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const supabase = useSupabaseClient()
+const isRevealed = ref(false)
+const lightboxUrl = ref(null)
+const lightboxCaption = ref('')
 
 const characterNickname = route.params.name
 
-const { data: character } = await useAsyncData(`oc-${characterNickname}`, async () => {
-  const { data, error } = await supabase
-    .from('original_characters')
-    .select('*')
-    .eq('nickname', characterNickname)
-    .single()
-    
-  if (error) console.error("SUPABASE ERROR:", error.message)
-  return data
+const { data: character, pending } = await useAsyncData(`oc-${characterNickname}`, async () => {
+  try {
+    const { data, error } = await supabase
+      .from('original_characters')
+      .select('*')
+      .eq('nickname', characterNickname)
+      .single()
+      
+    if (error) console.error("SUPABASE ERROR:", error.message)
+    return data
+  } catch (err) {
+    console.error("SUPABASE FETCH ERROR:", err)
+    return null
+  }
 })
 
 const isAlive = (status) => {
@@ -124,26 +170,40 @@ const isAlive = (status) => {
   return true
 }
 
+const openLightbox = (url, caption) => {
+  lightboxUrl.value = url
+  lightboxCaption.value = caption
+}
+
+const closeLightbox = () => {
+  lightboxUrl.value = null
+}
+
+const handleKeydown = (e) => {
+  if (e.key === 'Escape' && lightboxUrl.value) closeLightbox()
+}
+
 onMounted(() => {
+  document.addEventListener('keydown', handleKeydown)
   setTimeout(() => {
-    document.querySelectorAll('.os-anim').forEach(el => {
-      el.classList.add('is-revealed')
-    })
-  }, 100)
+    isRevealed.value = true
+  }, 60)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeydown)
 })
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;600&display=swap');
-
 .os-container {
   --bg-void: #05080c; 
   --cyan: #6eeaf5;
   --cyan-glow: rgba(110, 234, 245, 0.35);
   --text-primary: #e6f7f9;
   --text-secondary: #8ba9b0;
-  --bg-panel: rgba(12, 22, 30, 0.5);
-  --border-hud: rgba(110, 234, 245, 0.2);
+  --bg-panel: rgba(12, 22, 30, 0.65);
+  --border-hud: rgba(110, 234, 245, 0.22);
   --font-display: 'Orbitron', sans-serif;
   --font-body: 'Space Grotesk', sans-serif;
 
@@ -159,8 +219,8 @@ onMounted(() => {
 .bg-decoration-grid {
   position: fixed;
   inset: 0;
-  background-image: linear-gradient(rgba(110, 234, 245, 0.02) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(110, 234, 245, 0.02) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(110, 234, 245, 0.025) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(110, 234, 245, 0.025) 1px, transparent 1px);
   background-size: 50px 50px;
   z-index: 0;
   pointer-events: none;
@@ -169,11 +229,32 @@ onMounted(() => {
 .glow-text { color: var(--cyan); text-shadow: 0 0 8px var(--cyan-glow); }
 
 .hud-frame {
+  position: relative;
   background: var(--bg-panel);
   border: 1px solid var(--border-hud);
   border-radius: 4px;
-  padding: 2rem;
-  backdrop-filter: blur(8px);
+  padding: 2.25rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+.hud-corners::before,
+.hud-corners::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  pointer-events: none;
+}
+.hud-corners::before {
+  top: -1px; left: -1px;
+  border-top: 2px solid var(--cyan);
+  border-left: 2px solid var(--cyan);
+}
+.hud-corners::after {
+  bottom: -1px; right: -1px;
+  border-bottom: 2px solid var(--cyan);
+  border-right: 2px solid var(--cyan);
 }
 
 /* Header */
@@ -181,23 +262,38 @@ onMounted(() => {
   position: fixed;
   top: 0; left: 0; right: 0;
   display: flex; justify-content: space-between; align-items: center;
-  padding: 1.5rem 3rem;
-  background: rgba(5, 8, 12, 0.95);
-  border-bottom: 1px solid rgba(110, 234, 245, 0.1);
+  gap: 0.75rem;
+  padding: 1.25rem 3rem;
+  background: rgba(5, 8, 12, 0.92);
+  border-bottom: 1px solid rgba(110, 234, 245, 0.14);
   z-index: 50;
+  backdrop-filter: blur(12px);
 }
-.logo-text { font-family: var(--font-display); font-weight: 800; letter-spacing: 0.1em; }
+.logo { min-width: 0; flex: 1; overflow: hidden; }
+.logo-text {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: 0.12em;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .return-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
   color: var(--text-secondary); text-decoration: none; font-family: var(--font-display);
-  font-size: 0.85rem; transition: color 0.3s ease; display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.82rem; letter-spacing: 0.1em; transition: all 0.25s ease; display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.4rem 0.85rem; border: 1px solid rgba(110, 234, 245, 0.2); border-radius: 2px; background: rgba(6, 11, 16, 0.6);
 }
-.return-btn:hover { color: var(--cyan); text-shadow: 0 0 5px var(--cyan-glow); }
+.return-btn:hover { color: var(--cyan); border-color: var(--cyan); text-shadow: 0 0 8px var(--cyan-glow); }
 
 /* Layout */
 .document-wrapper {
   position: relative;
   z-index: 10;
-  padding: 8rem 5vw 4rem 5vw;
+  padding: 7.5rem 5vw 4rem 5vw;
   display: flex;
   justify-content: center;
 }
@@ -219,19 +315,47 @@ onMounted(() => {
   flex-shrink: 0;
   width: 280px;
   height: 280px;
+  padding: 0;
   border: 1px solid var(--cyan);
   border-radius: 4px;
   position: relative;
   overflow: hidden;
-  background: #000;
+  background: #030609;
+  cursor: pointer;
 }
 
 .wiki-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.9;
-  filter: grayscale(20%) contrast(110%);
+  opacity: 0.92;
+  filter: grayscale(15%) contrast(108%);
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+  display: block;
+}
+
+.hero-image-box:hover .wiki-img {
+  transform: scale(1.04);
+  filter: grayscale(0%) contrast(105%);
+}
+
+.zoom-badge {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  background: rgba(6, 11, 16, 0.85);
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  font-family: var(--font-display);
+  font-size: 0.62rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.hero-image-box:hover .zoom-badge {
+  opacity: 1;
 }
 
 .scanner-line {
@@ -240,7 +364,8 @@ onMounted(() => {
   background: var(--cyan);
   box-shadow: 0 0 15px var(--cyan-glow);
   animation: scan-vertical 4s linear infinite;
-  opacity: 0.5;
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 @keyframes scan-vertical {
@@ -262,11 +387,12 @@ onMounted(() => {
   margin-bottom: 1.5rem;
   border-bottom: 1px solid rgba(110, 234, 245, 0.15);
   padding-bottom: 1rem;
+  gap: 1rem;
 }
 
 .char-title {
   font-family: var(--font-display);
-  font-size: 2.5rem;
+  font-size: clamp(1.75rem, 3.5vw, 2.4rem);
   margin: 0 0 0.25rem 0;
   letter-spacing: 0.05em;
   word-wrap: break-word;
@@ -282,14 +408,14 @@ onMounted(() => {
 
 .status-badge {
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   padding: 0.4rem 0.8rem;
   border-radius: 2px;
   letter-spacing: 0.1em;
   white-space: nowrap;
 }
-.status-badge.alive { border: 1px solid var(--cyan); color: var(--cyan); background: rgba(110, 234, 245, 0.05); }
-.status-badge.dead { border: 1px solid #ff3366; color: #ff3366; background: rgba(255, 51, 102, 0.05); }
+.status-badge.alive { border: 1px solid var(--cyan); color: var(--cyan); background: rgba(110, 234, 245, 0.08); }
+.status-badge.dead { border: 1px solid #ff3366; color: #ff3366; background: rgba(255, 51, 102, 0.08); }
 
 .quick-stats {
   display: grid;
@@ -298,22 +424,23 @@ onMounted(() => {
 }
 
 .stat-box {
-  background: rgba(6, 11, 16, 0.4);
-  border: 1px solid rgba(110, 234, 245, 0.1);
+  background: rgba(6, 11, 16, 0.5);
+  border: 1px solid rgba(110, 234, 245, 0.12);
   padding: 1rem;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  border-radius: 3px;
 }
-.stat-box .label { font-size: 0.75rem; color: #5d7e86; font-weight: 600; }
-.stat-box .value { font-size: 1.1rem; color: var(--text-primary); }
+.stat-box .label { font-size: 0.72rem; color: #5d7e86; font-weight: 600; letter-spacing: 0.06em; }
+.stat-box .value { font-size: 1.08rem; color: var(--text-primary); }
 
 /* Sections */
 .section-title {
   font-family: var(--font-display);
   color: #a4c8d1;
-  font-size: 1.25rem;
-  margin-bottom: 1.5rem;
+  font-size: 1.2rem;
+  margin: 0 0 1.5rem 0;
   letter-spacing: 0.05em;
 }
 
@@ -334,14 +461,14 @@ onMounted(() => {
   grid-column: 1 / -1;
 }
 
-.detail-item .label { font-size: 0.75rem; color: #5d7e86; font-weight: 600; text-transform: uppercase; }
-.detail-item .value { font-size: 0.95rem; color: var(--text-primary); word-wrap: break-word; }
+.detail-item .label { font-size: 0.72rem; color: #5d7e86; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.detail-item .value { font-size: 0.96rem; color: var(--text-primary); word-wrap: break-word; line-height: 1.45; }
 
 /* Lore Text Blocks */
 .text-block {
   margin-bottom: 2rem;
-  padding-left: 1rem;
-  border-left: 2px solid rgba(110, 234, 245, 0.2);
+  padding-left: 1.25rem;
+  border-left: 2px solid rgba(110, 234, 245, 0.25);
 }
 .text-block:last-child { margin-bottom: 0; }
 
@@ -349,23 +476,23 @@ onMounted(() => {
   font-family: var(--font-display);
   font-size: 0.85rem;
   color: var(--cyan);
-  margin-bottom: 0.75rem;
+  margin: 0 0 0.75rem 0;
   letter-spacing: 0.1em;
 }
 
 .block-text {
   color: var(--text-secondary);
-  font-size: 1.05rem;
-  line-height: 1.7;
+  font-size: 1.04rem;
+  line-height: 1.75;
   white-space: pre-wrap;
+  margin: 0;
 }
 
-/* Rich Text Formatting for dynamically loaded HTML links */
 .rich-text :deep(a) {
   color: var(--cyan);
   text-decoration: none;
   border-bottom: 1px dashed rgba(110, 234, 245, 0.5);
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
 }
 
 .rich-text :deep(a:hover) {
@@ -373,10 +500,72 @@ onMounted(() => {
   border-bottom-style: solid;
 }
 
+/* Lightbox Modal */
+.cyber-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9990;
+  background: rgba(3, 6, 10, 0.88);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.lightbox-frame {
+  max-width: 92vw;
+  max-height: 90vh;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-color: var(--cyan);
+}
+
+.lightbox-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 1px solid rgba(110, 234, 245, 0.2);
+  padding-bottom: 0.5rem;
+}
+
+.lightbox-caption {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+}
+
+.lightbox-close {
+  background: rgba(110, 234, 245, 0.1);
+  border: 1px solid var(--cyan);
+  color: var(--cyan);
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  padding: 0.25rem 0.6rem;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.lightbox-img {
+  max-width: 88vw;
+  max-height: 78vh;
+  object-fit: contain;
+  display: block;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
+  .sub-header { padding: 0.9rem 1rem; gap: 0.5rem; }
+  .logo-text { font-size: 0.85rem; letter-spacing: 0.06em; }
+  .return-btn { font-size: 0.72rem; padding: 0.35rem 0.65rem; gap: 0.35rem; }
+  .document-wrapper { padding: 5.5rem 1rem 3rem 1rem; }
+  .hud-frame { padding: 1.5rem; }
   .wiki-hero { flex-direction: column; align-items: center; }
-  .hero-header-row { flex-direction: column; align-items: center; text-align: center; gap: 1rem; }
+  .hero-image-box { width: 100%; max-width: 280px; height: auto; aspect-ratio: 1; }
+  .hero-header-row { flex-direction: column; align-items: center; text-align: center; gap: 0.85rem; }
   .quick-stats { grid-template-columns: 1fr; }
 }
 
@@ -385,6 +574,8 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   min-height: 60vh;
+  font-family: var(--font-display);
+  letter-spacing: 0.1em;
 }
 
 /* Animations */

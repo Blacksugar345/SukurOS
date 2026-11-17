@@ -2,16 +2,16 @@
   <div class="os-container wiki-mode">
     
     <!-- Background Grid -->
-    <div class="bg-decoration-grid"></div>
+    <div class="bg-decoration-grid" aria-hidden="true"></div>
 
     <!-- Header -->
     <header class="sub-header">
       <div class="logo">
         <span class="logo-text glow-text">SUKUR.OS // ARCHIVE</span>
       </div>
-      <a href="/" class="return-btn">
+      <NuxtLink to="/" class="return-btn">
         <span class="caret-left">◂</span> RETURN
-      </a>
+      </NuxtLink>
     </header>
 
     <!-- Main Content -->
@@ -19,30 +19,34 @@
       <div class="archive-container">
         
         <!-- Header Section -->
-        <div class="doc-header os-anim anim-scan">
+        <div class="doc-header os-anim anim-scan" :class="{ 'is-revealed': isRevealed }">
+          <span class="hud-subtag">CENTRAL_REPOSITORY // INDEX_TABLES</span>
           <h1 class="doc-title glow-text">SYSTEM ARCHIVES</h1>
           <p class="doc-meta">SELECT CATEGORY TO VIEW DATABASE LOGS...</p>
         </div>
 
-        <!-- Category Filter Tabs -->
-        <div class="archive-tabs os-anim anim-scan">
+        <!-- Category Filter Tabs (Synced with [category] route param) -->
+        <div class="archive-tabs os-anim anim-scan" :class="{ 'is-revealed': isRevealed }" role="tablist" aria-label="Archive Categories">
           <button 
             v-for="cat in categories" 
             :key="cat.id"
+            type="button"
+            role="tab"
+            :aria-selected="activeCategory === cat.id"
             class="tab-btn"
             :class="{ 'active-tab': activeCategory === cat.id }"
-            @click="activeCategory = cat.id"
+            @click="selectCategory(cat.id)"
           >
             [{{ cat.label }}]
           </button>
         </div>
 
         <!-- DATA TABLES CONTAINER -->
-        <div class="hud-frame table-card os-anim anim-scan">
+        <div class="hud-frame hud-corners table-card os-anim anim-scan" :class="{ 'is-revealed': isRevealed }">
           
           <!-- 1. GAMES TABLE -->
           <div v-if="activeCategory === 'game'" class="table-wrapper">
-            <h2 class="table-title glow-text">> DATABASE: GAME_RECORDS</h2>
+            <h2 class="table-title glow-text">&gt; DATABASE: GAME_RECORDS</h2>
             <table class="cyber-table" v-if="gamesData?.length">
               <thead>
                 <tr>
@@ -59,7 +63,15 @@
                 <tr v-for="item in gamesData" :key="item.id">
                   <td class="id-col">#{{ item.id }}</td>
                   <td>
-                    <img :src="item.cover_image || '/Explorehome.png'" :alt="item.title" class="table-cover" />
+                    <img 
+                      :src="item.cover_image || '/Explorehome.png'" 
+                      :alt="item.title" 
+                      class="table-cover" 
+                      loading="lazy"
+                      decoding="async"
+                      width="50"
+                      height="50"
+                    />
                   </td>
                   <td class="name-col">
                     <NuxtLink :to="`/other/archive/game/${item.slug}`" class="item-link">
@@ -82,7 +94,7 @@
 
           <!-- 2. MUSIC TABLE -->
           <div v-if="activeCategory === 'music'" class="table-wrapper">
-            <h2 class="table-title glow-text">> DATABASE: MUSIC_LOGS</h2>
+            <h2 class="table-title glow-text">&gt; DATABASE: MUSIC_LOGS</h2>
             <table class="cyber-table" v-if="musicData?.length">
               <thead>
                 <tr>
@@ -99,7 +111,15 @@
                 <tr v-for="item in musicData" :key="item.id">
                   <td class="id-col">#{{ item.id }}</td>
                   <td>
-                    <img :src="item.cover_image || '/Explorehome.png'" :alt="item.title" class="table-cover" />
+                    <img 
+                      :src="item.cover_image || '/Explorehome.png'" 
+                      :alt="item.title" 
+                      class="table-cover" 
+                      loading="lazy"
+                      decoding="async"
+                      width="50"
+                      height="50"
+                    />
                   </td>
                   <td class="name-col">
                     <NuxtLink :to="`/other/archive/music/${item.slug}`" class="item-link">
@@ -122,7 +142,7 @@
 
           <!-- 3. DRAWING TABLE -->
           <div v-if="activeCategory === 'drawing'" class="table-wrapper">
-            <h2 class="table-title glow-text">> DATABASE: ARTWORK_FILES</h2>
+            <h2 class="table-title glow-text">&gt; DATABASE: ARTWORK_FILES</h2>
             <table class="cyber-table" v-if="drawingData?.length">
               <thead>
                 <tr>
@@ -139,7 +159,15 @@
                 <tr v-for="item in drawingData" :key="item.id">
                   <td class="id-col">#{{ item.id }}</td>
                   <td>
-                    <img :src="item.cover_image || '/Explorehome.png'" :alt="item.title" class="table-cover" />
+                    <img 
+                      :src="item.cover_image || '/Explorehome.png'" 
+                      :alt="item.title" 
+                      class="table-cover" 
+                      loading="lazy"
+                      decoding="async"
+                      width="50"
+                      height="50"
+                    />
                   </td>
                   <td class="name-col">
                     <NuxtLink :to="`/other/archive/drawing/${item.slug}`" class="item-link">
@@ -162,7 +190,7 @@
 
           <!-- 4. COOKING TABLE -->
           <div v-if="activeCategory === 'cooking'" class="table-wrapper">
-            <h2 class="table-title glow-text">> DATABASE: CULINARY_RECIPES</h2>
+            <h2 class="table-title glow-text">&gt; DATABASE: CULINARY_RECIPES</h2>
             <table class="cyber-table" v-if="cookingData?.length">
               <thead>
                 <tr>
@@ -179,7 +207,15 @@
                 <tr v-for="item in cookingData" :key="item.id">
                   <td class="id-col">#{{ item.id }}</td>
                   <td>
-                    <img :src="item.cover_image || '/Explorehome.png'" :alt="item.title" class="table-cover" />
+                    <img 
+                      :src="item.cover_image || '/Explorehome.png'" 
+                      :alt="item.title" 
+                      class="table-cover" 
+                      loading="lazy"
+                      decoding="async"
+                      width="50"
+                      height="50"
+                    />
                   </td>
                   <td class="name-col">
                     <NuxtLink :to="`/other/archive/cooking/${item.slug}`" class="item-link">
@@ -209,11 +245,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const supabase = useSupabaseClient()
-
-const activeCategory = ref('game')
+const route = useRoute()
+const router = useRouter()
+const isRevealed = ref(false)
 
 const categories = [
   { id: 'game', label: 'GAMES' },
@@ -222,39 +260,80 @@ const categories = [
   { id: 'cooking', label: 'COOKING' }
 ]
 
+const validCategoryIds = categories.map(c => c.id)
+
+const resolveCategoryFromRoute = () => {
+  const param = String(route.params.category || '').toLowerCase()
+  return validCategoryIds.includes(param) ? param : 'game'
+}
+
+const activeCategory = ref(resolveCategoryFromRoute())
+
+watch(
+  () => route.params.category,
+  () => {
+    activeCategory.value = resolveCategoryFromRoute()
+  }
+)
+
+const selectCategory = (catId) => {
+  activeCategory.value = catId
+  router.replace(`/other/archive/${catId}/list`)
+}
+
 // Fetch data for all 4 tables simultaneously
 const { data: gamesData } = await useAsyncData('list-games', async () => {
-  const { data } = await supabase.from('game').select('*').order('id', { ascending: true })
-  return data || []
+  try {
+    const { data, error } = await supabase.from('game').select('*').order('id', { ascending: true })
+    if (error) console.error("SUPABASE ERROR:", error.message)
+    return data || []
+  } catch (err) {
+    console.error("SUPABASE FETCH ERROR:", err)
+    return []
+  }
 })
 
 const { data: musicData } = await useAsyncData('list-music', async () => {
-  const { data } = await supabase.from('music').select('*').order('id', { ascending: true })
-  return data || []
+  try {
+    const { data, error } = await supabase.from('music').select('*').order('id', { ascending: true })
+    if (error) console.error("SUPABASE ERROR:", error.message)
+    return data || []
+  } catch (err) {
+    console.error("SUPABASE FETCH ERROR:", err)
+    return []
+  }
 })
 
 const { data: drawingData } = await useAsyncData('list-drawing', async () => {
-  const { data } = await supabase.from('drawing').select('*').order('id', { ascending: true })
-  return data || []
+  try {
+    const { data, error } = await supabase.from('drawing').select('*').order('id', { ascending: true })
+    if (error) console.error("SUPABASE ERROR:", error.message)
+    return data || []
+  } catch (err) {
+    console.error("SUPABASE FETCH ERROR:", err)
+    return []
+  }
 })
 
 const { data: cookingData } = await useAsyncData('list-cooking', async () => {
-  const { data } = await supabase.from('cooking').select('*').order('id', { ascending: true })
-  return data || []
+  try {
+    const { data, error } = await supabase.from('cooking').select('*').order('id', { ascending: true })
+    if (error) console.error("SUPABASE ERROR:", error.message)
+    return data || []
+  } catch (err) {
+    console.error("SUPABASE FETCH ERROR:", err)
+    return []
+  }
 })
 
 onMounted(() => {
   setTimeout(() => {
-    document.querySelectorAll('.os-anim').forEach(el => {
-      el.classList.add('is-revealed')
-    })
-  }, 100)
+    isRevealed.value = true
+  }, 60)
 })
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;600&display=swap');
-
 /* Base Styles */
 .os-container {
   --bg-void: #05080c; 
@@ -278,8 +357,8 @@ onMounted(() => {
 .bg-decoration-grid {
   position: fixed;
   inset: 0;
-  background-image: linear-gradient(rgba(110, 234, 245, 0.02) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(110, 234, 245, 0.02) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(110, 234, 245, 0.025) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(110, 234, 245, 0.025) 1px, transparent 1px);
   background-size: 40px 40px;
   z-index: 0;
   pointer-events: none;
@@ -292,24 +371,25 @@ onMounted(() => {
   position: fixed;
   top: 0; left: 0; right: 0;
   display: flex; justify-content: space-between; align-items: center;
-  padding: 1.5rem 3rem;
-  background: rgba(5, 8, 12, 0.95);
-  border-bottom: 1px solid rgba(110, 234, 245, 0.1);
+  padding: 1.25rem 3rem;
+  background: rgba(5, 8, 12, 0.92);
+  border-bottom: 1px solid rgba(110, 234, 245, 0.14);
   z-index: 50;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
 }
-.logo-text { font-family: var(--font-display); font-weight: 800; letter-spacing: 0.1em; }
+.logo-text { font-family: var(--font-display); font-weight: 800; font-size: 1.15rem; letter-spacing: 0.12em; }
 .return-btn {
   color: var(--text-secondary); text-decoration: none; font-family: var(--font-display);
-  font-size: 0.85rem; transition: color 0.3s ease; display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.82rem; letter-spacing: 0.1em; transition: all 0.25s ease; display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.4rem 0.85rem; border: 1px solid rgba(110, 234, 245, 0.2); border-radius: 2px; background: rgba(6, 11, 16, 0.6);
 }
-.return-btn:hover { color: var(--cyan); text-shadow: 0 0 5px var(--cyan-glow); }
+.return-btn:hover { color: var(--cyan); border-color: var(--cyan); text-shadow: 0 0 8px var(--cyan-glow); }
 
 /* Layout */
 .document-wrapper {
   position: relative;
   z-index: 10;
-  padding: 8rem 5vw 4rem 5vw;
+  padding: 7.5rem 5vw 4rem 5vw;
   display: flex;
   justify-content: center;
 }
@@ -319,27 +399,36 @@ onMounted(() => {
 }
 
 .doc-header { margin-bottom: 2rem; }
-.doc-title { font-family: var(--font-display); font-size: 2.2rem; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
-.doc-meta { font-family: var(--font-body); font-size: 0.9rem; color: #5d7e86; letter-spacing: 0.1em; text-transform: uppercase; }
+.hud-subtag {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  color: #5d7e86;
+  letter-spacing: 0.15em;
+  margin-bottom: 0.35rem;
+}
+.doc-title { font-family: var(--font-display); font-size: clamp(1.75rem, 3.5vw, 2.25rem); letter-spacing: 0.05em; margin: 0 0 0.5rem 0; }
+.doc-meta { font-family: var(--font-body); font-size: 0.9rem; color: #5d7e86; letter-spacing: 0.1em; text-transform: uppercase; margin: 0; }
 
 /* Filter Tabs */
 .archive-tabs {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: 0.85rem;
+  margin-bottom: 1.75rem;
   flex-wrap: wrap;
 }
 
 .tab-btn {
-  background: rgba(12, 22, 30, 0.6);
+  background: rgba(12, 22, 30, 0.65);
   border: 1px solid var(--border-hud);
   color: var(--text-secondary);
   font-family: var(--font-display);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.06em;
   padding: 0.6rem 1.25rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  border-radius: 2px;
+  transition: all 0.25s ease;
+  border-radius: 3px;
 }
 
 .tab-btn:hover {
@@ -349,18 +438,31 @@ onMounted(() => {
 
 .tab-btn.active-tab {
   color: var(--cyan);
-  background: rgba(110, 234, 245, 0.1);
+  background: rgba(110, 234, 245, 0.12);
   border-color: var(--cyan);
   text-shadow: 0 0 8px var(--cyan-glow);
 }
 
 /* HUD Table Container */
 .hud-frame {
-  background: rgba(12, 22, 30, 0.5);
+  position: relative;
+  background: rgba(12, 22, 30, 0.6);
   border: 1px solid var(--border-hud);
   border-top: 3px solid var(--cyan);
   padding: 2rem;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  border-radius: 3px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+.hud-corners::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; right: -1px;
+  width: 14px; height: 14px;
+  border-bottom: 2px solid var(--cyan);
+  border-right: 2px solid var(--cyan);
+  pointer-events: none;
 }
 
 .table-title {
@@ -379,6 +481,7 @@ onMounted(() => {
 /* Cyber Table Styling */
 .cyber-table {
   width: 100%;
+  min-width: 640px;
   border-collapse: collapse;
   text-align: left;
   font-size: 0.95rem;
@@ -386,7 +489,7 @@ onMounted(() => {
 
 .cyber-table th {
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: #5d7e86;
   padding: 0.75rem 1rem;
   border-bottom: 2px solid var(--border-hud);
@@ -396,12 +499,12 @@ onMounted(() => {
 
 .cyber-table td {
   padding: 0.75rem 1rem;
-  border-bottom: 1px dashed rgba(110, 234, 245, 0.1);
+  border-bottom: 1px dashed rgba(110, 234, 245, 0.12);
   vertical-align: middle;
 }
 
 .cyber-table tr:hover td {
-  background: rgba(110, 234, 245, 0.03);
+  background: rgba(110, 234, 245, 0.04);
 }
 
 .id-col {
@@ -416,6 +519,8 @@ onMounted(() => {
   object-fit: cover;
   border-radius: 2px;
   border: 1px solid var(--border-hud);
+  display: block;
+  background: #030609;
 }
 
 .name-col {
@@ -435,12 +540,13 @@ onMounted(() => {
 
 .status-badge {
   background: rgba(110, 234, 245, 0.08);
-  border: 1px solid rgba(110, 234, 245, 0.2);
+  border: 1px solid rgba(110, 234, 245, 0.22);
   color: var(--cyan);
   font-family: var(--font-display);
   font-size: 0.7rem;
   padding: 0.2rem 0.5rem;
   border-radius: 2px;
+  white-space: nowrap;
 }
 
 .rating-text {
@@ -453,10 +559,16 @@ onMounted(() => {
   font-size: 0.75rem;
   color: var(--cyan);
   text-decoration: none;
-  transition: text-shadow 0.2s ease;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid rgba(110, 234, 245, 0.25);
+  border-radius: 2px;
+  background: rgba(110, 234, 245, 0.05);
+  transition: all 0.2s ease;
 }
 
 .view-btn:hover {
+  border-color: var(--cyan);
+  background: rgba(110, 234, 245, 0.15);
   text-shadow: 0 0 8px var(--cyan-glow);
 }
 
@@ -470,9 +582,10 @@ onMounted(() => {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .sub-header { padding: 1rem 1.5rem; }
-  .document-wrapper { padding: 6rem 1rem 3rem 1rem; }
-  .hud-frame { padding: 1rem; }
+  .sub-header { padding: 1rem 1.25rem; }
+  .logo-text { font-size: 0.95rem; }
+  .document-wrapper { padding: 5.5rem 1rem 3rem 1rem; }
+  .hud-frame { padding: 1.25rem; }
   .doc-title { font-size: 1.6rem; }
 }
 

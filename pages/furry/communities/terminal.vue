@@ -2,56 +2,71 @@
   <div class="os-container terminal-mode">
     
     <!-- Background Grid -->
-    <div class="bg-decoration-grid"></div>
+    <div class="bg-decoration-grid" aria-hidden="true"></div>
 
     <!-- Header -->
     <header class="sub-header">
       <div class="logo">
         <span class="logo-text glow-text">SUKUR.OS // TERMINAL</span>
       </div>
-      <a href="/" class="return-btn">
+      <NuxtLink to="/" class="return-btn">
         <span class="caret-left">◂</span> EXIT_TERMINAL
-      </a>
+      </NuxtLink>
     </header>
 
     <!-- Main Terminal Interface -->
     <main class="document-wrapper" @click="focusInput">
-      <div class="terminal-window hud-frame os-anim anim-scan">
-        
-        <!-- Terminal Header -->
-        <div class="term-header">
-          <div class="term-buttons">
-            <span class="t-btn close"></span>
-            <span class="t-btn min"></span>
-            <span class="t-btn max"></span>
+      <div class="terminal-stack os-anim anim-scan" :class="{ 'is-revealed': isRevealed }">
+        <div class="terminal-window hud-frame">
+          
+          <!-- Terminal Header -->
+          <div class="term-header">
+            <div class="term-buttons" aria-hidden="true">
+              <span class="t-btn close"></span>
+              <span class="t-btn min"></span>
+              <span class="t-btn max"></span>
+            </div>
+            <div class="term-title">guest@sukur-os: /var/sec/furry_code</div>
           </div>
-          <div class="term-title">guest@sukur-os: /var/sec/furry_code</div>
+
+          <!-- Terminal Output -->
+          <div class="term-body" ref="terminalBody" aria-live="polite">
+            
+            <!-- Boot Sequence / History -->
+            <div v-for="(line, index) in terminalHistory" :key="index" class="term-line" :class="line.type">
+              <span v-if="line.type === 'input'" class="prompt">guest@sukur-os:~$</span>
+              <span class="text" v-html="line.text"></span>
+            </div>
+
+            <!-- Active Input Line -->
+            <div class="term-line active-input">
+              <span class="prompt">guest@sukur-os:~$</span>
+              <input 
+                type="text" 
+                v-model="currentCommand" 
+                @keyup.enter="processCommand"
+                @keydown.up.prevent="navigateHistory(-1)"
+                @keydown.down.prevent="navigateHistory(1)"
+                ref="commandInput"
+                class="command-input"
+                aria-label="Terminal Command Input"
+                placeholder="Type a command (e.g. help)..."
+                autocomplete="off"
+                spellcheck="false"
+                autofocus
+              />
+            </div>
+
+          </div>
         </div>
 
-        <!-- Terminal Output -->
-        <div class="term-body" ref="terminalBody">
-          
-          <!-- Boot Sequence / History -->
-          <div v-for="(line, index) in terminalHistory" :key="index" class="term-line" :class="line.type">
-            <span v-if="line.type === 'input'" class="prompt">guest@sukur-os:~$</span>
-            <span class="text" v-html="line.text"></span>
-          </div>
-
-          <!-- Active Input Line -->
-          <div class="term-line active-input">
-            <span class="prompt">guest@sukur-os:~$</span>
-            <input 
-              type="text" 
-              v-model="currentCommand" 
-              @keyup.enter="processCommand"
-              ref="commandInput"
-              class="command-input"
-              autocomplete="off"
-              spellcheck="false"
-              autofocus
-            />
-          </div>
-
+        <!-- Quick Command Helper Bar (Accessible & Mobile-Friendly) -->
+        <div class="quick-cmd-bar" @click.stop>
+          <span class="quick-label">&gt; QUICK_EXEC:</span>
+          <button type="button" class="quick-chip" @click="runQuickCommand('help')">help</button>
+          <button type="button" class="quick-chip" @click="runQuickCommand('ls')">ls</button>
+          <button type="button" class="quick-chip" @click="runQuickCommand('cat readme.txt')">cat readme.txt</button>
+          <button type="button" class="quick-chip" @click="runQuickCommand('clear')">clear</button>
         </div>
       </div>
     </main>
@@ -66,6 +81,11 @@ import { ref, onMounted, nextTick } from 'vue'
 const currentCommand = ref('')
 const terminalBody = ref(null)
 const commandInput = ref(null)
+const isRevealed = ref(false)
+
+// Command History for Up/Down arrows
+const commandLog = ref([])
+const historyPointer = ref(-1)
 
 // Puzzle States
 let isConnectedToMainframe = false
@@ -94,10 +114,31 @@ const scrollToBottom = async () => {
   }
 }
 
+const navigateHistory = (direction) => {
+  if (!commandLog.value.length) return
+  const nextIdx = historyPointer.value + direction
+  if (nextIdx >= 0 && nextIdx < commandLog.value.length) {
+    historyPointer.value = nextIdx
+    currentCommand.value = commandLog.value[nextIdx]
+  } else if (nextIdx >= commandLog.value.length) {
+    historyPointer.value = commandLog.value.length
+    currentCommand.value = ''
+  }
+}
+
+const runQuickCommand = (cmdText) => {
+  currentCommand.value = cmdText
+  processCommand()
+  focusInput()
+}
+
 // Command Processor
 const processCommand = () => {
   const input = currentCommand.value.trim()
   if (!input) return
+
+  commandLog.value.push(input)
+  historyPointer.value = commandLog.value.length
 
   // 1. Log the user's input
   terminalHistory.value.push({ type: 'input', text: input })
@@ -116,17 +157,17 @@ const processCommand = () => {
       terminalHistory.value.push({ type: 'output', text: '  <span class="highlight">connect</span> - Route connection to a target (Usage: connect [target])' })
       terminalHistory.value.push({ type: 'output', text: '  <span class="highlight">echo</span>    - Print text to standard output / send authorization phrase' })
       terminalHistory.value.push({ type: 'output', text: '  <span class="highlight">clear</span>   - Clear terminal screen' })
-      break;
+      break
 
     case 'clear':
       terminalHistory.value = []
-      break;
+      break
 
     case 'ls':
       terminalHistory.value.push({ type: 'output', text: 'drwxr-xr-x  2 root  root  4096 Aug 08 09:21 .' })
       terminalHistory.value.push({ type: 'output', text: '-rw-r--r--  1 root  root   142 Aug 08 09:21 <span class="file">readme.txt</span>' })
       terminalHistory.value.push({ type: 'output', text: '-rwx------  1 root  root  2048 Aug 08 09:21 <span class="file locked">payload.enc</span>' })
-      break;
+      break
 
     case 'cat':
       if (args[1] === 'readme.txt') {
@@ -140,7 +181,7 @@ const processCommand = () => {
       } else {
         terminalHistory.value.push({ type: 'error', text: `cat: ${args[1]}: No such file or directory` })
       }
-      break;
+      break
 
     case 'connect':
       if (args[1]?.toUpperCase() === 'ZWASONIA') {
@@ -156,7 +197,7 @@ const processCommand = () => {
       } else {
         terminalHistory.value.push({ type: 'error', text: `connect: Host ${args[1]} not found.` })
       }
-      break;
+      break
 
     case 'echo':
       if (!args[1]) {
@@ -181,7 +222,7 @@ const processCommand = () => {
           terminalHistory.value.push({ type: 'output', text: args.slice(1).join(' ') })
         }
       }
-      break;
+      break
 
     default:
       terminalHistory.value.push({ type: 'error', text: `Command not found: ${cmd}` })
@@ -194,20 +235,16 @@ const processCommand = () => {
 
 onMounted(() => {
   setTimeout(() => {
-    document.querySelectorAll('.os-anim').forEach(el => {
-      el.classList.add('is-revealed')
-    })
+    isRevealed.value = true
     focusInput()
-  }, 100)
+  }, 80)
 })
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;600&family=Fira+Code:wght@400;500&display=swap');
-
 /* Base Styles */
 .os-container {
-  --bg-void: #020406; /* Even darker for the terminal */
+  --bg-void: #020406;
   --cyan: #6eeaf5;
   --cyan-glow: rgba(110, 234, 245, 0.35);
   --text-primary: #e6f7f9;
@@ -228,8 +265,8 @@ onMounted(() => {
 .bg-decoration-grid {
   position: fixed;
   inset: 0;
-  background-image: linear-gradient(rgba(110, 234, 245, 0.02) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(110, 234, 245, 0.02) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(110, 234, 245, 0.025) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(110, 234, 245, 0.025) 1px, transparent 1px);
   background-size: 50px 50px;
   z-index: 0;
   pointer-events: none;
@@ -242,54 +279,63 @@ onMounted(() => {
   position: fixed;
   top: 0; left: 0; right: 0;
   display: flex; justify-content: space-between; align-items: center;
-  padding: 1.5rem 3rem;
-  background: rgba(2, 4, 6, 0.95);
-  border-bottom: 1px solid rgba(110, 234, 245, 0.1);
+  padding: 1.25rem 3rem;
+  background: rgba(2, 4, 6, 0.92);
+  border-bottom: 1px solid rgba(110, 234, 245, 0.14);
   z-index: 50;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
 }
-.logo-text { font-family: var(--font-display); font-weight: 800; letter-spacing: 0.1em; }
+.logo-text { font-family: var(--font-display); font-weight: 800; font-size: 1.15rem; letter-spacing: 0.12em; }
 .return-btn {
   color: var(--text-secondary); text-decoration: none; font-family: var(--font-display);
-  font-size: 0.85rem; transition: color 0.3s ease; display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.82rem; letter-spacing: 0.1em; transition: all 0.25s ease; display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.4rem 0.85rem; border: 1px solid rgba(110, 234, 245, 0.2); border-radius: 2px; background: rgba(6, 11, 16, 0.6);
 }
-.return-btn:hover { color: var(--cyan); text-shadow: 0 0 5px var(--cyan-glow); }
+.return-btn:hover { color: var(--cyan); border-color: var(--cyan); text-shadow: 0 0 8px var(--cyan-glow); }
 
 /* Terminal Layout */
 .document-wrapper {
   position: relative;
   z-index: 10;
-  padding: 8rem 5vw 4rem 5vw;
+  padding: 7.5rem 5vw 4rem 5vw;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 12rem);
+  min-height: calc(100vh - 4rem);
+}
+
+.terminal-stack {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .hud-frame {
   width: 100%;
-  max-width: 900px;
-  height: 60vh;
+  height: 62vh;
   min-height: 400px;
-  background: rgba(6, 10, 14, 0.85);
-  border: 1px solid rgba(110, 234, 245, 0.3);
+  background: rgba(6, 10, 14, 0.88);
+  border: 1px solid rgba(110, 234, 245, 0.32);
   border-radius: 6px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(110, 234, 245, 0.05);
-  backdrop-filter: blur(5px);
+  box-shadow: 0 0 36px rgba(0, 0, 0, 0.85), inset 0 0 24px rgba(110, 234, 245, 0.05);
+  backdrop-filter: blur(8px);
   overflow: hidden;
 }
 
-/* Terminal Mac-style Header */
+/* Terminal Header */
 .term-header {
-  height: 40px;
-  background: rgba(2, 4, 6, 0.9);
+  height: 42px;
+  background: rgba(2, 4, 6, 0.95);
   border-bottom: 1px solid rgba(110, 234, 245, 0.2);
   display: flex;
   align-items: center;
   padding: 0 1rem;
   position: relative;
+  flex-shrink: 0;
 }
 
 .term-buttons {
@@ -306,8 +352,9 @@ onMounted(() => {
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-mono);
-  font-size: 0.85rem;
-  color: #5d7e86;
+  font-size: 0.82rem;
+  color: #6b919b;
+  white-space: nowrap;
 }
 
 /* Terminal Body */
@@ -317,28 +364,23 @@ onMounted(() => {
   overflow-y: auto;
   font-family: var(--font-mono);
   font-size: 0.95rem;
-  line-height: 1.5;
+  line-height: 1.55;
   display: flex;
   flex-direction: column;
 }
 
-/* Custom Scrollbar */
-.term-body::-webkit-scrollbar { width: 8px; }
-.term-body::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
-.term-body::-webkit-scrollbar-thumb { background: rgba(110, 234, 245, 0.2); border-radius: 4px; }
-.term-body::-webkit-scrollbar-thumb:hover { background: rgba(110, 234, 245, 0.4); }
-
 /* Terminal Lines & Formatting */
 .term-line {
   display: flex;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.3rem;
   word-wrap: break-word;
+  flex-wrap: wrap;
 }
 .term-line.input { color: var(--cyan); }
 .term-line.output { color: var(--text-primary); }
-.term-line.system { color: #5d7e86; }
+.term-line.system { color: #6b919b; }
 .term-line.error { color: #ff5f56; }
-.term-line.success { color: #00ff9d; font-weight: bold; text-shadow: 0 0 5px rgba(0, 255, 157, 0.5); }
+.term-line.success { color: #00ff9d; font-weight: bold; text-shadow: 0 0 6px rgba(0, 255, 157, 0.5); }
 
 .prompt {
   color: #00ff9d;
@@ -354,10 +396,10 @@ onMounted(() => {
 /* Decrypted Code Block */
 .code-block {
   color: var(--cyan);
-  background: rgba(110, 234, 245, 0.05);
-  padding: 0.25rem 0.5rem;
+  background: rgba(110, 234, 245, 0.08);
+  padding: 0.3rem 0.65rem;
   display: inline-block;
-  margin: 0.1rem 0;
+  margin: 0.15rem 0;
   border-left: 2px solid var(--cyan);
 }
 
@@ -365,6 +407,7 @@ onMounted(() => {
 .active-input {
   margin-top: 0.5rem;
   align-items: center;
+  flex-wrap: nowrap;
 }
 
 .command-input {
@@ -375,7 +418,58 @@ onMounted(() => {
   font-size: 0.95rem;
   flex-grow: 1;
   outline: none;
-  caret-color: var(--cyan); /* Cyan blinking cursor */
+  caret-color: var(--cyan);
+  min-width: 120px;
+}
+
+.command-input::placeholder {
+  color: rgba(107, 145, 155, 0.45);
+}
+
+/* Quick Command Bar */
+.quick-cmd-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  background: rgba(6, 11, 16, 0.75);
+  border: 1px solid rgba(110, 234, 245, 0.2);
+  border-radius: 4px;
+}
+
+.quick-label {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  color: #6b919b;
+  letter-spacing: 0.08em;
+  margin-right: 0.35rem;
+}
+
+.quick-chip {
+  background: rgba(110, 234, 245, 0.06);
+  border: 1px solid rgba(110, 234, 245, 0.25);
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.quick-chip:hover {
+  background: rgba(110, 234, 245, 0.18);
+  border-color: var(--cyan);
+  box-shadow: 0 0 8px rgba(110, 234, 245, 0.25);
+}
+
+@media (max-width: 768px) {
+  .sub-header { padding: 1rem 1.25rem; }
+  .logo-text { font-size: 0.95rem; }
+  .document-wrapper { padding: 5.5rem 1rem 2rem 1rem; }
+  .term-title { font-size: 0.72rem; max-width: 65%; overflow: hidden; text-overflow: ellipsis; }
+  .term-body { padding: 1rem; font-size: 0.85rem; }
 }
 
 /* Animations */

@@ -2,21 +2,21 @@
   <div class="os-container uplink-mode">
     
     <!-- Deep Background: Matrix/Hex Streams (CSS-only animation) -->
-    <div class="data-stream-bg"></div>
+    <div class="data-stream-bg" aria-hidden="true"></div>
     
     <!-- Middle Background: Circuit Wires & Grid -->
-    <div class="bg-decoration-grid"></div>
-    <div class="circuit-overlay left-circuit"></div>
-    <div class="circuit-overlay right-circuit"></div>
+    <div class="bg-decoration-grid" aria-hidden="true"></div>
+    <div class="circuit-overlay left-circuit" aria-hidden="true"></div>
+    <div class="circuit-overlay right-circuit" aria-hidden="true"></div>
 
     <!-- Header -->
     <header class="sub-header">
       <div class="logo">
         <span class="logo-text glow-text">SUKUR.OS // SOCIALS</span>
       </div>
-      <a href="/" class="return-btn">
+      <NuxtLink to="/" class="return-btn">
         <span class="caret-left">◂</span> RETURN
-      </a>
+      </NuxtLink>
     </header>
 
     <!-- Main Content -->
@@ -24,11 +24,11 @@
       <div class="uplink-container">
         
         <!-- Hero Title Section -->
-        <div class="doc-header os-anim anim-scan">
-          <div class="target-bracket top-left"></div>
-          <div class="target-bracket top-right"></div>
-          <div class="target-bracket bottom-left"></div>
-          <div class="target-bracket bottom-right"></div>
+        <div class="doc-header os-anim anim-scan" :class="{ 'is-revealed': isRevealed }">
+          <div class="target-bracket top-left" aria-hidden="true"></div>
+          <div class="target-bracket top-right" aria-hidden="true"></div>
+          <div class="target-bracket bottom-left" aria-hidden="true"></div>
+          <div class="target-bracket bottom-right" aria-hidden="true"></div>
           
           <div class="header-content">
             <div class="status-indicator">
@@ -43,17 +43,18 @@
         <div class="socials-grid">
           
           <!-- Category Block -->
-          <div 
+          <section 
             class="category-block hud-frame os-anim anim-scan" 
+            :class="{ 'is-revealed': isRevealed }"
             v-for="(category, index) in linkCategories" 
             :key="index"
-            :style="{ animationDelay: `${index * 0.15}s` }"
+            :style="{ transitionDelay: `${index * 0.1}s` }"
           >
             <!-- Block Header -->
             <div class="category-header">
               <span class="category-icon">{{ category.icon }}</span>
               <h2 class="category-title">{{ category.title }}</h2>
-              <div class="header-line"></div>
+              <div class="header-line" aria-hidden="true"></div>
             </div>
 
             <!-- Links Container -->
@@ -67,25 +68,25 @@
                 class="social-btn"
               >
                 <!-- Decorative scan line on hover -->
-                <div class="btn-scan-line"></div>
+                <div class="btn-scan-line" aria-hidden="true"></div>
                 
                 <div class="btn-content">
                   <div class="platform-info">
                     <!-- The CSS Mask Icon -->
-                    <span class="platform-logo" :style="{ '--icon-url': `url(${link.logo})` }"></span>
+                    <span class="platform-logo" :style="{ '--icon-url': `url(${link.logo})` }" aria-hidden="true"></span>
                     <span class="platform-name">{{ link.name }}</span>
                   </div>
-                  <span class="platform-arrow">↗</span>
+                  <span class="platform-arrow" aria-hidden="true">↗</span>
                 </div>
               </a>
             </div>
-          </div>
+          </section>
 
         </div>
 
         <!-- Footer Signature -->
-        <div class="terminal-footer os-anim anim-scan" style="animation-delay: 0.8s;">
-          <p class="sys-msg">> END OF TRANSMISSION. ALL CHANNELS OPEN.</p>
+        <div class="terminal-footer os-anim anim-scan" :class="{ 'is-revealed': isRevealed }" style="transition-delay: 0.45s;">
+          <p class="sys-msg">&gt; END OF TRANSMISSION. ALL CHANNELS OPEN.</p>
         </div>
 
       </div>
@@ -96,6 +97,8 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+
+const isRevealed = ref(false)
 
 // Social Media Data Structure
 // Includes Iconify URLs for SVG masks
@@ -139,22 +142,18 @@ const linkCategories = ref([
 
 onMounted(() => {
   setTimeout(() => {
-    document.querySelectorAll('.os-anim').forEach(el => {
-      el.classList.add('is-revealed')
-    })
-  }, 100)
+    isRevealed.value = true
+  }, 60)
 })
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-
 /* Base System Styles */
 .os-container {
   --bg-void: #030508; 
   --cyan: #6eeaf5;
   --cyan-glow: rgba(110, 234, 245, 0.4);
-  --cyan-dim: rgba(110, 234, 245, 0.1);
+  --cyan-dim: rgba(110, 234, 245, 0.12);
   --text-primary: #e6f7f9;
   --text-secondary: #8ba9b0;
   --accent: #ffb800;
@@ -217,43 +216,46 @@ onMounted(() => {
 .sub-header {
   position: fixed; top: 0; left: 0; right: 0;
   display: flex; justify-content: space-between; align-items: center;
-  padding: 1.5rem 3rem; background: rgba(3, 5, 8, 0.8);
+  padding: 1.25rem 3rem; background: rgba(3, 5, 8, 0.88);
   border-bottom: 1px solid var(--cyan-dim); z-index: 50; backdrop-filter: blur(12px);
 }
-.logo-text { font-family: var(--font-display); font-weight: 800; letter-spacing: 0.1em; }
+.logo-text { font-family: var(--font-display); font-weight: 800; font-size: 1.15rem; letter-spacing: 0.12em; }
 .return-btn {
   color: var(--text-secondary); text-decoration: none; font-family: var(--font-display);
-  font-size: 0.85rem; transition: color 0.3s ease; display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.82rem; letter-spacing: 0.1em; transition: all 0.25s ease; display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.4rem 0.85rem; border: 1px solid rgba(110, 234, 245, 0.2); border-radius: 2px; background: rgba(6, 11, 16, 0.6);
 }
-.return-btn:hover { color: var(--cyan); text-shadow: 0 0 5px var(--cyan-glow); }
+.return-btn:hover { color: var(--cyan); border-color: var(--cyan); text-shadow: 0 0 8px var(--cyan-glow); }
 
 /* =========================================
    MAIN LAYOUT & HERO
    ========================================= */
 .document-wrapper {
-  position: relative; z-index: 10; padding: 8rem 5vw 6rem 5vw;
+  position: relative; z-index: 10; padding: 7.5rem 5vw 6rem 5vw;
   display: flex; justify-content: center;
 }
 .uplink-container { max-width: 1000px; width: 100%; }
 
 .doc-header {
-  position: relative; padding: 3rem 2rem; margin-bottom: 4rem;
-  background: rgba(6, 11, 16, 0.4); backdrop-filter: blur(5px); text-align: center;
+  position: relative; padding: 2.75rem 2rem; margin-bottom: 3.5rem;
+  background: rgba(6, 11, 16, 0.5); backdrop-filter: blur(8px); text-align: center;
+  border: 1px solid rgba(110, 234, 245, 0.12);
 }
 
 .target-bracket {
-  position: absolute; width: 30px; height: 30px; border: 2px solid var(--cyan); opacity: 0.7;
+  position: absolute; width: 26px; height: 26px; border: 2px solid var(--cyan); opacity: 0.75;
 }
-.top-left { top: 0; left: 0; border-right: none; border-bottom: none; }
-.top-right { top: 0; right: 0; border-left: none; border-bottom: none; }
-.bottom-left { bottom: 0; left: 0; border-right: none; border-top: none; }
-.bottom-right { bottom: 0; right: 0; border-left: none; border-top: none; }
+.top-left { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+.top-right { top: -1px; right: -1px; border-left: none; border-bottom: none; }
+.bottom-left { bottom: -1px; left: -1px; border-right: none; border-top: none; }
+.bottom-right { bottom: -1px; right: -1px; border-left: none; border-top: none; }
 
 .status-indicator {
   display: inline-flex; align-items: center; gap: 0.5rem;
-  font-family: var(--font-display); font-size: 0.75rem; color: #00ff9d;
-  letter-spacing: 0.1em; margin-bottom: 1rem; background: rgba(0, 255, 157, 0.1);
-  padding: 0.25rem 0.75rem; border-radius: 20px;
+  font-family: var(--font-display); font-size: 0.72rem; color: #00ff9d;
+  letter-spacing: 0.12em; margin-bottom: 1rem; background: rgba(0, 255, 157, 0.1);
+  border: 1px solid rgba(0, 255, 157, 0.25);
+  padding: 0.28rem 0.85rem; border-radius: 20px;
 }
 .pulse-dot {
   width: 8px; height: 8px; background: #00ff9d; border-radius: 50%;
@@ -261,39 +263,40 @@ onMounted(() => {
 }
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
-.doc-title { font-family: var(--font-display); font-size: 2.5rem; letter-spacing: 0.1em; margin: 0 0 0.5rem 0; }
-.doc-meta { font-size: 1rem; color: var(--text-secondary); letter-spacing: 0.1em; margin: 0; }
+.doc-title { font-family: var(--font-display); font-size: clamp(1.85rem, 4vw, 2.5rem); letter-spacing: 0.08em; margin: 0 0 0.5rem 0; }
+.doc-meta { font-size: 1rem; color: var(--text-secondary); letter-spacing: 0.06em; margin: 0; }
 
 /* =========================================
    SOCIAL GRID & CARDS
    ========================================= */
 .socials-grid {
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.5rem;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 2.25rem;
 }
 
 .hud-frame {
-  background: linear-gradient(135deg, rgba(12, 22, 30, 0.8) 0%, rgba(6, 11, 16, 0.9) 100%);
+  background: linear-gradient(135deg, rgba(12, 22, 30, 0.82) 0%, rgba(6, 11, 16, 0.92) 100%);
   border: 1px solid var(--cyan-dim); border-top: 2px solid var(--cyan);
   padding: 2rem; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
   backdrop-filter: blur(10px);
+  border-radius: 3px;
 }
 .hud-frame::after {
   content: ''; position: absolute; bottom: 0; right: 0; width: 20px; height: 20px;
   background: var(--cyan-dim); clip-path: polygon(100% 0, 100% 100%, 0 100%);
 }
 
-.category-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
-.category-icon { font-family: var(--font-display); font-size: 1.2rem; color: var(--bg-void); background: var(--cyan); padding: 0.2rem 0.5rem; font-weight: 800; }
-.category-title { font-family: var(--font-display); font-size: 1.1rem; color: var(--text-primary); margin: 0; letter-spacing: 0.05em; }
+.category-header { display: flex; align-items: center; gap: 0.85rem; margin-bottom: 1.5rem; }
+.category-icon { font-family: var(--font-display); font-size: 1.05rem; color: var(--bg-void); background: var(--cyan); padding: 0.2rem 0.5rem; font-weight: 800; border-radius: 2px; }
+.category-title { font-family: var(--font-display); font-size: 1.02rem; color: var(--text-primary); margin: 0; letter-spacing: 0.05em; }
 .header-line { flex-grow: 1; height: 1px; background: repeating-linear-gradient(90deg, var(--cyan-dim), var(--cyan-dim) 5px, transparent 5px, transparent 10px); }
 
 /* Link Buttons */
 .links-list { display: flex; flex-direction: column; gap: 0.75rem; }
 
 .social-btn {
-  position: relative; display: block; background: rgba(3, 5, 8, 0.6);
+  position: relative; display: block; background: rgba(3, 5, 8, 0.65);
   border: 1px solid var(--cyan-dim); padding: 1rem 1.25rem; text-decoration: none;
-  overflow: hidden; transition: all 0.3s ease;
+  overflow: hidden; transition: all 0.25s ease; border-radius: 2px;
 }
 
 .btn-content {
@@ -306,10 +309,6 @@ onMounted(() => {
   gap: 1rem;
 }
 
-/* 
-  CSS Masking Magic! 
-  This takes the SVG URL and uses it as a shape stamp over a solid background color.
-*/
 .platform-logo {
   display: inline-block;
   width: 22px;
@@ -323,17 +322,17 @@ onMounted(() => {
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
   mask-position: center;
-  transition: background-color 0.3s ease, filter 0.3s ease;
+  transition: background-color 0.25s ease, filter 0.25s ease;
 }
 
 .platform-name {
-  font-family: var(--font-body); font-weight: 600; font-size: 1.1rem;
-  color: var(--text-primary); letter-spacing: 0.05em; transition: color 0.3s ease;
+  font-family: var(--font-body); font-weight: 600; font-size: 1.08rem;
+  color: var(--text-primary); letter-spacing: 0.04em; transition: color 0.25s ease;
 }
 
 .platform-arrow {
-  font-family: var(--font-display); color: var(--cyan); font-size: 1.2rem;
-  opacity: 0.5; transition: all 0.3s ease;
+  font-family: var(--font-display); color: var(--cyan); font-size: 1.15rem;
+  opacity: 0.5; transition: all 0.25s ease;
 }
 
 .btn-scan-line {
@@ -345,7 +344,7 @@ onMounted(() => {
 /* Button Hover Effects */
 .social-btn:hover {
   background: rgba(110, 234, 245, 0.1); border-color: var(--cyan);
-  box-shadow: inset 4px 0 0 var(--cyan); transform: translateX(5px);
+  box-shadow: inset 4px 0 0 var(--cyan); transform: translateX(4px);
 }
 .social-btn:hover .platform-name { color: var(--cyan); text-shadow: 0 0 5px var(--cyan-glow); }
 .social-btn:hover .platform-logo { 
@@ -359,7 +358,7 @@ onMounted(() => {
    FOOTER TERMINAL TEXT
    ========================================= */
 .terminal-footer { margin-top: 4rem; text-align: center; border-top: 1px dashed var(--cyan-dim); padding-top: 2rem; }
-.sys-msg { font-family: monospace; font-size: 0.85rem; color: var(--text-secondary); }
+.sys-msg { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-secondary); }
 
 /* =========================================
    RESPONSIVE DESIGN (IPAD & MOBILE)
@@ -371,8 +370,9 @@ onMounted(() => {
 }
 
 @media (max-width: 650px) {
-  .sub-header { padding: 1rem 1.5rem; }
-  .document-wrapper { padding: 6rem 1rem 4rem 1rem; }
+  .sub-header { padding: 1rem 1.25rem; }
+  .logo-text { font-size: 0.95rem; }
+  .document-wrapper { padding: 5.5rem 1rem 4rem 1rem; }
   
   .doc-header { padding: 2rem 1rem; margin-bottom: 2.5rem; }
   .doc-title { font-size: 1.5rem; }
